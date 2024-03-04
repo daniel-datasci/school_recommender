@@ -62,6 +62,15 @@ box-shadow:0 0 15px 5px #ccc; background-color: #a8f0c6;
 </div>
 """
 
+
+
+# Search for program
+def search_term_if_not_found(term, df):
+	final_recommendation = df[df['Programme_name'].str.contains(term)]
+	return final_recommendation
+
+
+
 def main():
 
     st.title("Program Recommendation App")
@@ -85,21 +94,27 @@ def main():
             if search_term is not None:
                 try:
                     results = get_recommendation(search_term, cosine_sim_mat, df, num_of_rec)
+                    # st.write(results)
+                    for row in results.iterrows():
+                        rec_title = row[1][0]
+                        rec_score = row[1][1]
+                        rec_req = row[1][2]
+                        rec_sch = row[1][3]
+                        rec_web  = row[1][4]
+                        rec_spe = row[1][5]
+                        rec_coun = row[1][6]
+
+                        #st.write("Title:", rec_title)
+                        stc.html(RESULT_TEMP.format(rec_title, rec_score, rec_req, rec_spe, rec_web, rec_sch, rec_coun), height=450)
+
                 except:
                     results = "Not Found"
+                    st.warning(results)
+                    st.info("Suggested Options include")
+                    final_recommendation = search_term_if_not_found(search_term, df)
+                    st.dataframe(final_recommendation)
 
-               # st.write(results)
-                for row in results.iterrows():
-                    rec_title = row[1][0]
-                    rec_score = row[1][1]
-                    rec_req = row[1][2]
-                    rec_sch = row[1][3]
-                    rec_web  = row[1][4]
-                    rec_spe = row[1][5]
-                    rec_coun = row[1][6]
-
-                    #st.write("Title:", rec_title)
-                    stc.html(RESULT_TEMP.format(rec_title, rec_score, rec_req, rec_spe, rec_web, rec_sch, rec_coun), height=400)
+               
 
     else:
         st.subheader("About")
