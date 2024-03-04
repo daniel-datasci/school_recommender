@@ -25,7 +25,7 @@ def vectorize_text_to_cosine_mat(data):
 
 
 # Recommendation System
-
+def 
 
 def main():
 
