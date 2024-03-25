@@ -70,6 +70,9 @@ def display_candidate_info(candidate_info):
     candidate_table = pd.DataFrame(candidate_info, columns=["Name", "Job", "LinkedIn URL"])
     st.write(candidate_table)
 
+
+
+
 # Streamlit web application
 st.set_page_config(page_title="Master's Program Recommendation", page_icon=":mortar_board:")
 
