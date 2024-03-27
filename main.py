@@ -87,7 +87,7 @@ def main():
     button_label = '[Switch To Recommend Individual Profile](https://individualrecommender.streamlit.app/)'
 
     # Create the button with Markdown
-    if st.button(button_label):
+    if st.button(button_label, unsafe_allow_html=True):
         # Add your functionality here
         st.write("Button clicked!")
 
