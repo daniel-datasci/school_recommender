@@ -62,20 +62,24 @@ def main():
         top_program_indices = user_scores.argsort()[0][-3:][::-1]
 
         # Display recommendations
-        st.markdown(f"Hello {name},")
+        st.subheader(f"Hello {name},")
         st.markdown(f"We have taken a look at your profile.")
         st.markdown(f"You are a {current_job} with a total of {years_of_experience} years of experience. You are certified with {qualification}.")
-
         st.markdown("\nBelow are the recommendations we have for you based on your profile:\n")
+        st.markdown("")
+        st.markdown("")
+        st.markdown("")
         for i, idx in enumerate(top_program_indices, 1):
             program = school_df.loc[idx]
-            st.markdown(f"Recommendation {i} for {name}:")
-            st.markdown(f"1. Programme Name: {program['Programme_name']}")
+            st.markdown(f"**Recommendation {i} for {name}:**")
+            st.markdown(f" Programme Name: {program['Programme_name']}")
             st.markdown(f"   Programme Requirement: {program['Programme_requirement']}")
             st.markdown(f"   Document Requirements: {program['Document_Requirements']}")
             st.markdown(f"   School Name: {program['School_Name']}")
             st.markdown(f"   Country: {program['Country']}")
             st.markdown(f"   University Website: {program['University_Website']}")
+            st.markdown("")
+            st.markdown("")
             st.markdown("")
 
 if __name__ == "__main__":
