@@ -83,6 +83,14 @@ def recommend_program(candidate_id):
 def main():
     st.title('Masters Program Recommendation System')
 
+    # Define the button label
+    button_label = 'Switch To Recommend Individual Profile [Click Here](https://example.com)'
+
+    # Create the button with Markdown
+    if st.button(button_label):
+        # Add your functionality here
+        st.write("Button clicked!")
+
     # Upload candidate.csv file
     candidate_file = st.file_uploader('Upload candidate.csv file', type='csv')
 
