@@ -84,7 +84,7 @@ def main():
     st.title('Masters Program Recommendation System')
 
     # Define the button label
-    button_label = 'Switch To Recommend Individual Profile [Click Here](https://example.com)'
+    button_label = '[Switch To Recommend Individual Profile](https://individualrecommender.streamlit.app/)'
 
     # Create the button with Markdown
     if st.button(button_label):
