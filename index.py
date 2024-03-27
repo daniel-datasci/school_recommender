@@ -43,14 +43,8 @@ cosine_sim = cosine_similarity(tfidf_matrix, tfidf_vectorizer.transform(school_d
 def main():
     st.title('Masters Program Recommendation System - Individual Section')
 
+    st.markdown('<a href="https://schoolrecommender-ted.streamlit.app/" target="_blank">Switch To Recommend Group Profiles</a>', unsafe_allow_html=True)
     # Define the button label
-    button_label = '[Switch To Recommend Individual Profile](https://schoolrecommender-ted.streamlit.app/)'
-
-    # Create the button with Markdown
-    if st.button(button_label, unsafe_allow_html=True):
-        # Add your functionality here
-        st.write("Button clicked!")
-
 
     # Input fields
     name = st.text_input('Enter Your Name')

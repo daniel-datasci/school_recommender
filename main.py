@@ -83,13 +83,7 @@ def recommend_program(candidate_id):
 def main():
     st.title('Masters Program Recommendation System')
 
-    # Define the button label
-    button_label = '[Switch To Recommend Individual Profile](https://individualrecommender.streamlit.app/)'
-
-    # Create the button with Markdown
-    if st.button(button_label, unsafe_allow_html=True):
-        # Add your functionality here
-        st.write("Button clicked!")
+    st.markdown('<a href="https://individualrecommender.streamlit.app/" target="_blank">Switch To Recommend Individual Profile</a>', unsafe_allow_html=True)
 
     # Upload candidate.csv file
     candidate_file = st.file_uploader('Upload candidate.csv file', type='csv')
