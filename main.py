@@ -4,105 +4,114 @@ import streamlit.components.v1 as stc
 
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.metrics.pairwise import linear_kernel
+
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+import streamlit as st
+
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+import streamlit as st
+
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+import streamlit as st
+
+
+# Set page width
+st.set_page_config(layout="wide")
+
 
 # Load datasets
 
-#Load Our Dataset
+# Load Our Dataset
 def load_data(data):
     df = pd.read_csv(data)
     return df
 
 
-candidates_df = load_data("data/candidate.csv")
-schools_df = load_data("data/school.csv")
+candidate_df = load_data("data/candidate.csv")
+school_df = load_data("data/school.csv")
 requirements_df = load_data("data/requirements.csv")
 
 
+# Preprocess data
+candidate_df.fillna('', inplace=True)  # Fill missing values with empty string
+school_df.fillna('', inplace=True)
+requirements_df.fillna('', inplace=True)
 
-# Merge requirements with schools on Programme_name
-schools_requirements_df = pd.merge(schools_df, requirements_df, on="Programme_name")
+# Combine text features for candidate and school data
+candidate_df['text_features'] = candidate_df['Name'] + ' || ' + candidate_df['Email'] + ' || ' + \
+                                candidate_df['Current_Job'] + ' || ' + candidate_df['Qualification']
 
-# Convert candidate and program requirements to text for vectorization
-candidates_df["candidate_text"] = candidates_df["Name"] + " " + candidates_df["Job"]
-schools_requirements_df["program_text"] = schools_requirements_df["Programme_name"] + " " + schools_requirements_df["Programme_requirement"]
+school_df['text_features'] = school_df['Programme_name'] + ' || ' + school_df['Programme_requirement'] + ' || ' + school_df['Document_Requirements'] + ' || ' + \
+                              school_df['School_Name'] + ' || ' + school_df['Country'] + ' || ' + school_df['University_Website']
 
-# Fill missing values in candidate_text column with empty strings
-candidates_df["candidate_text"].fillna("", inplace=True)
+# Combine all text features for TF-IDF fitting
+all_text_features = pd.concat([candidate_df['text_features'], school_df['text_features']])
 
-# Vectorize candidate and program texts
-vectorizer = TfidfVectorizer(stop_words="english")
-candidate_matrix = vectorizer.fit_transform(candidates_df["candidate_text"])
-program_matrix = vectorizer.transform(schools_requirements_df["program_text"])
+# Create TF-IDF vectorizer
+tfidf_vectorizer = TfidfVectorizer(stop_words='english')
+tfidf_matrix = tfidf_vectorizer.fit_transform(all_text_features)
 
-# Calculate cosine similarity between candidate and program matrices
-cosine_similarities = linear_kernel(candidate_matrix, program_matrix)
+# Split TF-IDF matrix into candidate and school parts
+candidate_tfidf_matrix = tfidf_matrix[:len(candidate_df)]
+school_tfidf_matrix = tfidf_matrix[len(candidate_df):]
+
+# Calculate cosine similarity between candidate and school data
+cosine_sim = cosine_similarity(candidate_tfidf_matrix, school_tfidf_matrix)
 
 # Function to recommend programs for a candidate
+def recommend_program(candidate_id):
+    # Get top recommended program for the candidate
+    candidate_scores = cosine_sim[candidate_id]
+    top_program_index = candidate_scores.argmax()  # Index of top recommended program
+    top_program = school_df.iloc[top_program_index]
 
+    # Prepare output DataFrame
+    output_df = candidate_df.loc[candidate_id, ['Name', 'Email', 'Current_Job', 'Qualification']]
+    output_df = pd.concat([output_df, top_program[['Programme_name', 'Programme_requirement', 'Document_Requirements', 'School_Name', 'Country', 'University_Website']]], axis=0)
 
-# Function to recommend programs for a candidate
-def recommend_programs(candidate_id):
-    # Find index of candidate
-    candidate_index = candidates_df.index[candidates_df["ID"] == candidate_id].tolist()
-    
-    if not candidate_index:
-        return []  # Return empty list if candidate ID not found
-    
-    candidate_index = candidate_index[0]
+    return output_df
 
-    # Calculate similarities for the candidate
-    candidate_similarities = cosine_similarities[candidate_index]
+# Streamlit UI
+def main():
+    st.title('Masters Program Recommendation System')
 
-    # Get top 5 most similar programs
-    top_program_indices = candidate_similarities.argsort()[-5:][::-1]
+    # Upload candidate.csv file
+    candidate_file = st.file_uploader('Upload candidate.csv file', type='csv')
 
-    # Display recommended programs
-    recommended_programs = []
-    for idx in top_program_indices:
-        program_info = schools_requirements_df.loc[idx, ["Programme_name", "School_Name", "Specialization", "Country", "University_Website", "Programme_requirement", "Document_Requirements"]]
-        recommended_programs.append(program_info)
+    if candidate_file is not None:
+        # Read candidate data from uploaded file
+        candidate_data = pd.read_csv(candidate_file)
 
-    return recommended_programs
+        # Preprocess candidate data
+        candidate_data.fillna('', inplace=True)
+        candidate_data['text_features'] = candidate_data['Name'] + ' || ' + candidate_data['Email'] + ' || ' + \
+                                          candidate_data['Current_Job'] + ' || ' + candidate_data['Qualification']
 
-# Function to display candidate information in a table
-def display_candidate_info(candidate_info):
-    candidate_table = pd.DataFrame(candidate_info, columns=["Name", "Job", "LinkedIn URL"])
-    st.write(candidate_table)
+        # Transform candidate text data using pre-fit TF-IDF vectorizer
+        candidate_tfidf_matrix = tfidf_vectorizer.transform(candidate_data['text_features'])
 
+        # Calculate cosine similarity between candidate and school data
+        candidate_scores = cosine_similarity(candidate_tfidf_matrix, school_tfidf_matrix)
 
+        # Get top recommended program for each candidate
+        recommended_programs = []
+        for i in range(len(candidate_data)):
+            recommended_program = recommend_program(i)
+            recommended_programs.append(recommended_program)
 
+        # Concatenate recommended programs for all candidates
+        final_recommendations = pd.concat(recommended_programs, axis=1).T.reset_index(drop=True)
 
-# Streamlit web application
-st.set_page_config(page_title="Master's Program Recommendation", page_icon=":mortar_board:")
+        # Display recommended programs
+        st.write(final_recommendations)
 
-# Header
-st.title("Master's Program Recommendation System")
-st.write("Welcome to the Master's Program Recommendation System! Enter your candidate ID to get personalized program recommendations.")
-
-# Candidate ID input
-candidate_id = st.text_input("Enter your candidate ID:")
-
-# Recommendation button
-if st.button("Get Recommendations"):
-    # Validate candidate ID
-    if not candidate_id.isdigit() or int(candidate_id) not in candidates_df["ID"].values:
-        st.error("Please enter a valid candidate ID.")
-    else:
-        # Get recommendations for the candidate
-        recommended_programs = recommend_programs(int(candidate_id))
-
-        # Display candidate information
-        candidate_info = candidates_df.loc[candidates_df["ID"] == int(candidate_id), ["Name", "Job", "url"]]
-        candidate_info.columns = ["Name", "Job", "LinkedIn URL"]  # Update column name for LinkedIn URL
-        st.subheader("Candidate Information")
-        display_candidate_info(candidate_info)
-
-        # Display recommended programs if available
-        if recommended_programs:
-            st.subheader("Recommended Programs")
-            for program in recommended_programs:
-                st.write(program)
-        else:
-            st.write("No programs recommended for this candidate.")
-
+if __name__ == "__main__":
+    main()
